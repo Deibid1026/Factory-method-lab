@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Factory Method — Lab Interactivo</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --orange: #ef8354;
+    --orange-dim: rgba(239,131,84,0.15);
+    --orange-dark: #c4623a;
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.12);
+    --text: #e8eaf6;
+    --text-muted: #8892b0;
+    --text-dim: #5c6482;
+    --code-bg: #0d1117;
+    --radius: 10px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  *, *::before, *::after { box-sizing: inherit; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100%;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px 14px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: var(--orange);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .header-text h1 { font-size: 17px; font-weight: 700; color: var(--text); }
+  .header-text p  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .header-progress {
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text-muted);
+  }
+  .progress-bar {
+    width: 110px; height: 6px;
+    background: var(--border); border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--orange);
+    border-radius: 99px; transition: width .4s ease;
+  }
+
+  /* ── NAV TABS ── */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    background: var(--surface);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 16px; font-size: 13px; font-weight: 500;
+    color: var(--text-muted); border: none; background: none;
+    cursor: pointer; white-space: nowrap;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .2s, border-color .2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .tab-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: 10px; font-weight: 700; margin-right: 6px;
+    background: var(--border); color: var(--text-muted);
+  }
+  .tab.done .tab-num { background: var(--orange); color: var(--bg); }
+
+  /* ── MAIN ── */
+  .main { max-width: 860px; margin: 0 auto; padding: 28px 24px 60px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--orange); text-transform: uppercase;
+    letter-spacing: .06em; margin-bottom: 10px;
+  }
+  .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  .card p  { color: var(--text-muted); margin-bottom: 10px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* ── CONCEPT BOX ── */
+  .concept {
+    background: var(--orange-dim);
+    border: 1px solid var(--orange);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .concept strong { color: var(--orange); }
+
+  /* ── CODE ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #cdd6f4;
+    margin: 12px 0;
+  }
+  .kw  { color: #cba6f7; }
+  .cls { color: #89dceb; }
+  .fn  { color: #a6e3a1; }
+  .cm  { color: #585b70; font-style: italic; }
+  .str { color: #a6e3a1; }
+  .ret { color: #fab387; }
+
+  /* ── UML DIAGRAM ── */
+  .uml {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+  .uml svg { display: block; margin: 0 auto; }
+
+  /* ── QUIZ ── */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .question-text {
+    font-size: 15px; font-weight: 600; margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .q-num {
+    display: inline-block;
+    background: var(--orange); color: var(--bg);
+    font-size: 11px; font-weight: 700; border-radius: 4px;
+    padding: 1px 6px; margin-right: 8px; vertical-align: middle;
+  }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    text-align: left; font-size: 14px; color: var(--text);
+  }
+  .option:hover:not(:disabled) { border-color: var(--orange); background: var(--orange-dim); }
+  .option.correct  { border-color: var(--green); background: var(--green-dim); }
+  .option.wrong    { border-color: var(--red);   background: var(--red-dim); }
+  .option.reveal   { border-color: var(--green); background: var(--green-dim); opacity: .7; }
+  .option:disabled { cursor: default; }
+  .opt-letter {
+    flex-shrink: 0; width: 22px; height: 22px;
+    background: var(--border); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+  }
+  .option.correct .opt-letter { background: var(--green); color: var(--bg); }
+  .option.wrong   .opt-letter { background: var(--red);   color: var(--bg); }
+  .option.reveal  .opt-letter { background: var(--green); color: var(--bg); }
+  .feedback {
+    margin-top: 10px; padding: 10px 14px;
+    border-radius: 8px; font-size: 13.5px;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .feedback.bad { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red); }
+
+  /* ── TALLER DE CÓDIGO ── */
+  .code-editor {
+    width: 100%;
+    background: var(--code-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #cdd6f4;
+    line-height: 1.7;
+    resize: vertical;
+    min-height: 200px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .code-editor:focus { border-color: var(--orange); }
+  .editor-label {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-bottom: 6px;
+  }
+  .hint-box {
+    background: var(--blue-dim);
+    border: 1px solid var(--blue);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--blue);
+    margin: 10px 0;
+    display: none;
+  }
+  .hint-box.show { display: block; }
+
+  /* ── AI FEEDBACK ── */
+  .ai-box {
+    background: var(--surface2);
+    border: 1.5px solid var(--orange);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.65;
+    min-height: 60px;
+    display: none;
+    white-space: pre-wrap;
+  }
+  .ai-box.show { display: block; }
+  .ai-tag {
+    font-size: 11px; font-weight: 700; color: var(--orange);
+    text-transform: uppercase; letter-spacing: .07em;
+    margin-bottom: 6px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: 8px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+    border: none; transition: opacity .15s, transform .1s;
+  }
+  .btn:hover:not(:disabled) { opacity: .88; }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-primary  { background: var(--orange); color: var(--bg); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  /* ── SCORE ── */
+  .score-ring {
+    width: 96px; height: 96px; margin: 0 auto 16px;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .score-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .score-num { font-size: 26px; font-weight: 800; color: var(--orange); text-align: center; }
+  .score-label { font-size: 11px; color: var(--text-muted); }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 22px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .result-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .result-card p  { color: var(--text-muted); font-size: 14px; }
+  .review-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px; margin-bottom: 8px; font-size: 13.5px;
+  }
+  .review-item.ok  { background: var(--green-dim); }
+  .review-item.bad { background: var(--red-dim); }
+  .review-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── MISC ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 5px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .tag-orange { background: var(--orange-dim); color: var(--orange); }
+  .tag-green  { background: var(--green-dim);  color: var(--green); }
+  .tag-blue   { background: var(--blue-dim);   color: var(--blue); }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+  th {
+    background: var(--surface2); text-align: left;
+    padding: 8px 12px; font-weight: 700; font-size: 12px;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  td:first-child { color: var(--orange); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+
+  ul, ol { padding-left: 20px; color: var(--text-muted); font-size: 14px; margin: 8px 0; }
+  li { margin-bottom: 4px; }
+  strong { color: var(--text); }
+
+  @media (max-width: 580px) {
+    .main { padding: 18px 14px 50px; }
+    .header { padding: 14px 16px 10px; }
+    .tabs { padding: 0 14px; }
+    .header-text h1 { font-size: 15px; }
+    .header-progress { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🏭</div>
+  <div class="header-text">
+    <h1>Factory Method — Lab Interactivo</h1>
+    <p>Arquitectura de Software · Patrones de diseño creacionales</p>
+  </div>
+  <div class="header-progress">
+    <span id="progress-text">0 / 6</span>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="gotoTab(0)"><span class="tab-num" id="tn0">1</span>Teoría</button>
+  <button class="tab" onclick="gotoTab(1)"><span class="tab-num" id="tn1">2</span>Estructura</button>
+  <button class="tab" onclick="gotoTab(2)"><span class="tab-num" id="tn2">3</span>Quiz</button>
+  <button class="tab" onclick="gotoTab(3)"><span class="tab-num" id="tn3">4</span>Taller</button>
+  <button class="tab" onclick="gotoTab(4)"><span class="tab-num" id="tn4">5</span>Retos</button>
+  <button class="tab" onclick="gotoTab(5)"><span class="tab-num" id="tn5">6</span>Resultados</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECCIÓN 0 — TEORÍA
+══════════════════════════════════════════════════════ -->
+<div class="main">
+<div class="section active" id="s0">
+  <div class="card">
+    <div class="card-title">Patrón creacional · GoF 1994</div>
+    <h2>¿Qué es Factory Method?</h2>
+    <p>Define una <strong>interfaz para crear un objeto</strong>, pero deja que las <strong>subclases decidan qué clase instanciar</strong>. Factory Method le permite a una clase diferir la instanciación a sus subclases.</p>
+    <p>También se conoce como <strong>Constructor Virtual</strong>.</p>
+  </div>
+
+  <div class="concept">
+    <strong>Problema que resuelve:</strong> Cuando una clase de alto nivel necesita crear objetos, pero <em>no puede anticipar</em> la clase concreta que debe instanciar. Usar <code>new ClaseConcreta()</code> directamente acopla el código y viola el Principio Abierto/Cerrado.
+  </div>
+
+  <div class="card">
+    <div class="card-title">Motivación clásica (GoF)</div>
+    <p>Un framework de aplicaciones tiene dos clases abstractas: <code>Application</code> y <code>Document</code>. <code>Application</code> sabe <em>cuándo</em> crear un Document (al hacer "Nuevo"), pero NO sabe <em>qué tipo</em> crear — eso depende de la aplicación concreta.</p>
+    <p>La solución: <code>Application</code> declara un método abstracto <code>createDocument()</code>, y cada subclase (<code>DrawingApp</code>, <code>SpreadsheetApp</code>) lo implementa devolviendo el tipo correcto.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">¿Cuándo usarlo?</div>
+    <ul>
+      <li>Una clase <strong>no puede prever</strong> la clase de los objetos que debe crear.</li>
+      <li>Se quiere que las <strong>subclases</strong> especifiquen los objetos que se crean.</li>
+      <li>Se busca <strong>desacoplar</strong> el código cliente de las clases concretas.</li>
+      <li>Se trabaja con <strong>frameworks extensibles</strong> donde otros desarrolladores definen los productos.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tres ejemplos conocidos</div>
+    <table>
+      <tr><th>Ejemplo</th><th>Creator</th><th>Factory Method</th><th>Product</th></tr>
+      <tr><td>JDBC (Java)</td><td>DriverManager</td><td>getConnection(url)</td><td>Connection</td></tr>
+      <tr><td>Framework UI</td><td>DialogoUI</td><td>crearBoton()</td><td>Boton</td></tr>
+      <tr><td>Notificaciones</td><td>ServicioNotif.</td><td>crearNotificacion()</td><td>Notificacion</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Consecuencias</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+      <div>
+        <p style="color:var(--green);font-weight:700;margin-bottom:6px">✓ Ventajas</p>
+        <ul>
+          <li>Bajo acoplamiento entre creador y producto</li>
+          <li>Cumple el Principio Abierto/Cerrado</li>
+          <li>Responsabilidad única (lógica de creación separada)</li>
+          <li>Facilita extensión sin modificar código existente</li>
+        </ul>
+      </div>
+      <div>
+        <p style="color:var(--red);font-weight:700;margin-bottom:6px">✗ Desventajas</p>
+        <ul>
+          <li>Más subclases (puede ser sobre-ingeniería)</li>
+          <li>Todos los productos necesitan una interfaz común</li>
+          <li>El cliente debe elegir qué ConcreteCreator instanciar</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="gotoTab(1)">Continuar → Estructura ⟶</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECCIÓN 1 — ESTRUCTURA
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="card">
+    <div class="card-title">Estructura formal del patrón</div>
+    <h2>Diagrama de clases (UML)</h2>
+    <p>Los cuatro participantes y sus relaciones:</p>
+  </div>
+
+  <div class="uml">
+    <svg width="720" height="320" viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+      <defs>
+        <marker id="tri" markerWidth="10" markerHeight="8" refX="0" refY="4" orient="auto">
+          <polygon points="0 0, 10 4, 0 8" fill="#0d1117" stroke="#8892b0" stroke-width="1.2"/>
+        </marker>
+        <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#8892b0"/>
+        </marker>
+      </defs>
+      <!-- Product -->
+      <rect x="20" y="40" width="200" height="100" rx="6" fill="#1a1d27" stroke="#2e3350" stroke-width="1.5"/>
+      <rect x="20" y="40" width="200" height="36" rx="6" fill="#22263a"/>
+      <rect x="20" y="74" width="200" height="2" fill="#2e3350"/>
+      <text x="120" y="56" text-anchor="middle" fill="#8892b0" font-size="10" font-style="italic" font-family="monospace">«interface»</text>
+      <text x="120" y="70" text-anchor="middle" fill="#e8eaf6" font-size="14" font-weight="700" font-family="monospace">Product</text>
+      <text x="34" y="96" fill="#cdd6f4" font-size="12" font-family="monospace">+ operacion()</text>
+
+      <!-- ConcreteProduct -->
+      <rect x="20" y="210" width="200" height="90" rx="6" fill="#1a1d27" stroke="#8d99ae" stroke-width="1.5"/>
+      <rect x="20" y="210" width="200" height="34" rx="6" fill="#8d99ae"/>
+      <rect x="20" y="242" width="200" height="2" fill="#5c6482"/>
+      <text x="120" y="232" text-anchor="middle" fill="#0f1117" font-size="13" font-weight="700" font-family="monospace">ConcreteProduct</text>
+      <text x="34" y="264" fill="#cdd6f4" font-size="12" font-family="monospace">+ operacion()</text>
+
+      <!-- Creator -->
+      <rect x="500" y="20" width="200" height="130" rx="6" fill="#1a1d27" stroke="#2e3350" stroke-width="1.5"/>
+      <rect x="500" y="20" width="200" height="46" rx="6" fill="#22263a"/>
+      <rect x="500" y="64" width="200" height="2" fill="#2e3350"/>
+      <text x="600" y="36" text-anchor="middle" fill="#8892b0" font-size="10" font-style="italic" font-family="monospace">«abstract»</text>
+      <text x="600" y="52" text-anchor="middle" fill="#e8eaf6" font-size="13" font-weight="700" font-style="italic" font-family="monospace">Creator</text>
+      <text x="514" y="85" fill="#cdd6f4" font-size="11" font-family="monospace">+ anOperation()</text>
+      <text x="514" y="103" fill="#a6e3a1" font-size="11" font-style="italic" font-family="monospace">+ crearProducto()</text>
+      <text x="514" y="119" fill="#585b70" font-size="10" font-style="italic" font-family="monospace">  // factory method</text>
+
+      <!-- ConcreteCreator -->
+      <rect x="500" y="210" width="200" height="90" rx="6" fill="#1a1d27" stroke="#8d99ae" stroke-width="1.5"/>
+      <rect x="500" y="210" width="200" height="34" rx="6" fill="#8d99ae"/>
+      <rect x="500" y="242" width="200" height="2" fill="#5c6482"/>
+      <text x="600" y="232" text-anchor="middle" fill="#0f1117" font-size="13" font-weight="700" font-family="monospace">ConcreteCreator</text>
+      <text x="514" y="264" fill="#cdd6f4" font-size="12" font-family="monospace">+ crearProducto()</text>
+      <text x="514" y="282" fill="#585b70" font-size="11" font-family="monospace">  return new CP()</text>
+
+      <!-- Product → ConcreteProduct (herencia) -->
+      <line x1="120" y1="140" x2="120" y2="200" stroke="#8892b0" stroke-width="1.5"/>
+      <polygon points="110,200 120,212 130,200" fill="#0d1117" stroke="#8892b0" stroke-width="1.5"/>
+
+      <!-- Creator → ConcreteCreator (herencia) -->
+      <line x1="600" y1="150" x2="600" y2="200" stroke="#8892b0" stroke-width="1.5"/>
+      <polygon points="590,200 600,212 610,200" fill="#0d1117" stroke="#8892b0" stroke-width="1.5"/>
+
+      <!-- Creator ---> Product (dependencia) -->
+      <line x1="500" y1="85" x2="230" y2="85" stroke="#8892b0" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr)"/>
+      <text x="360" y="79" text-anchor="middle" fill="#8892b0" font-size="10" font-family="monospace">crea / usa</text>
+
+      <!-- Leyenda -->
+      <line x1="20" y1="304" x2="50" y2="304" stroke="#8892b0" stroke-width="1.3"/>
+      <polygon points="40,300 50,304 40,308" fill="#0d1117" stroke="#8892b0" stroke-width="1.2"/>
+      <text x="56" y="308" fill="#585b70" font-size="11" font-family="monospace">Herencia</text>
+      <line x1="160" y1="304" x2="196" y2="304" stroke="#8892b0" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+      <text x="202" y="308" fill="#585b70" font-size="11" font-family="monospace">Dependencia</text>
+    </svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Participantes</div>
+    <table>
+      <tr><th>Rol</th><th>Descripción</th></tr>
+      <tr><td>Product</td><td>Interfaz que deben cumplir todos los objetos creados por el factory method.</td></tr>
+      <tr><td>ConcreteProduct</td><td>Implementación específica de Product.</td></tr>
+      <tr><td>Creator</td><td>Declara el factory method (puede tener implementación por defecto) y lo <em>usa</em> internamente — nunca crea productos directamente.</td></tr>
+      <tr><td>ConcreteCreator</td><td>Sobrescribe el factory method y decide qué ConcreteProduct instanciar.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ejemplo de código</div>
+    <pre><span class="cm">// Product</span>
+<span class="kw">interface</span> <span class="cls">Notificacion</span> {
+  <span class="fn">enviar</span>(<span class="cls">String</span> msg, <span class="cls">String</span> dest);
+}
+
+<span class="cm">// Creator (abstracto)</span>
+<span class="kw">abstract class</span> <span class="cls">ServicioNotificacion</span> {
+  <span class="kw">abstract</span> <span class="cls">Notificacion</span> <span class="fn">crearNotificacion</span>();  <span class="cm">// factory method</span>
+
+  <span class="kw">void</span> <span class="fn">notificar</span>(<span class="cls">String</span> msg, <span class="cls">String</span> dest) {
+    <span class="cls">Notificacion</span> n = <span class="fn">crearNotificacion</span>();      <span class="cm">// vía la interfaz</span>
+    n.<span class="fn">enviar</span>(msg, dest);
+  }
+}
+
+<span class="cm">// ConcreteCreator</span>
+<span class="kw">class</span> <span class="cls">ServicioEmail</span> <span class="kw">extends</span> <span class="cls">ServicioNotificacion</span> {
+  <span class="cls">Notificacion</span> <span class="fn">crearNotificacion</span>() {
+    <span class="kw">return new</span> <span class="cls">NotificacionEmail</span>();  <span class="cm">// ← única decisión concreta</span>
+  }
+}</pre>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="gotoTab(0)">← Teoría</button>
+    <button class="btn btn-primary" onclick="gotoTab(2)">Continuar → Quiz ⟶</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECCIÓN 2 — QUIZ
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="card">
+    <div class="card-title">Evaluación de comprensión</div>
+    <h2>Quiz — Factory Method</h2>
+    <p>Responde las 6 preguntas. Recibirás retroalimentación inmediata en cada una.</p>
+  </div>
+
+  <div id="quiz-container"></div>
+
+  <div id="quiz-result" style="display:none">
+    <div class="result-card">
+      <div class="score-ring">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="40" fill="none" stroke="#22263a" stroke-width="10"/>
+          <circle cx="48" cy="48" r="40" fill="none" stroke="#ef8354" stroke-width="10"
+            stroke-dasharray="251.3" id="score-dash" stroke-dashoffset="251.3" stroke-linecap="round"/>
+        </svg>
+        <div><div class="score-num" id="score-val">0/6</div><div class="score-label">correctas</div></div>
+      </div>
+      <h2 id="result-title"></h2>
+      <p id="result-msg"></p>
+    </div>
+    <div id="review-list"></div>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn btn-secondary" onclick="resetQuiz()">↩ Reintentar quiz</button>
+      <button class="btn btn-primary" onclick="gotoTab(3)">Continuar → Taller ⟶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECCIÓN 3 — TALLER DE CÓDIGO
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="card">
+    <div class="card-title">Actividad práctica</div>
+    <h2>Taller: Implementar Factory Method</h2>
+    <p>Lee el enunciado, escribe el código y pídele a la IA que lo evalúe. La retroalimentación es inmediata.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Enunciado</div>
+    <p>Una empresa de logística necesita exportar su lista de envíos en distintos formatos. Debes aplicar el patrón Factory Method para que el sistema pueda generar un <strong>ReporteEnvios</strong> en tres formatos: <strong>PDF</strong>, <strong>Excel</strong> y <strong>CSV</strong>.</p>
+    <p><strong>Requisitos:</strong></p>
+    <ol>
+      <li>Define una <strong>interfaz</strong> <code>ReporteEnvios</code> con el método <code>generar()</code>.</li>
+      <li>Implementa <strong>tres clases concretas</strong>: <code>ReportePDF</code>, <code>ReporteExcel</code> y <code>ReporteCSV</code>.</li>
+      <li>Crea una <strong>clase abstracta</strong> <code>FabricaReporte</code> con el factory method <code>crearReporte()</code> (abstracto) y un método <code>generarReporte()</code> que use el factory method internamente.</li>
+      <li>Implementa las tres <strong>fábricas concretas</strong> correspondientes.</li>
+    </ol>
+  </div>
+
+  <div class="card" style="padding-bottom:8px">
+    <div class="editor-label">Tu código (Java, Python o pseudocódigo)</div>
+    <textarea class="code-editor" id="code-input" rows="20" placeholder="// Escribe tu implementación aquí...
+// Puedes usar Java, Python o pseudocódigo
+
+interface ReporteEnvios {
+    void generar();
+}
+
+abstract class FabricaReporte {
+    // ...
+}
+
+// Sigue implementando..."></textarea>
+
+    <div class="hint-box" id="hint-box">
+      💡 <strong>Pista:</strong> Recuerda que el factory method debe ser abstracto en la clase Creator, y cada ConcreteCreator solo necesita implementar ese método devolviendo <code>new ClaseProducto()</code>. La lógica de uso del producto va en el método <code>generarReporte()</code> de la clase abstracta.
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-eval" onclick="evaluateCode()">🤖 Evaluar con IA</button>
+      <button class="btn btn-secondary btn-sm" onclick="toggleHint()">💡 Pista</button>
+      <button class="btn btn-secondary btn-sm" onclick="showSolution()">👁 Ver solución</button>
+    </div>
+
+    <div id="ai-feedback" class="ai-box">
+      <div class="ai-tag">🤖 Retroalimentación de la IA</div>
+      <div id="ai-text">Procesando...</div>
+    </div>
+  </div>
+
+  <div id="solution-box" style="display:none">
+    <div class="card">
+      <div class="card-title">Solución de referencia</div>
+      <pre><span class="cm">// 1. Product</span>
+<span class="kw">interface</span> <span class="cls">ReporteEnvios</span> {
+  <span class="kw">void</span> <span class="fn">generar</span>();
+}
+
+<span class="cm">// 2. ConcreteProducts</span>
+<span class="kw">class</span> <span class="cls">ReportePDF</span> <span class="kw">implements</span> <span class="cls">ReporteEnvios</span> {
+  <span class="kw">public void</span> <span class="fn">generar</span>() {
+    System.out.println(<span class="str">"Generando reporte PDF de envíos..."</span>);
+  }
+}
+<span class="kw">class</span> <span class="cls">ReporteExcel</span> <span class="kw">implements</span> <span class="cls">ReporteEnvios</span> {
+  <span class="kw">public void</span> <span class="fn">generar</span>() {
+    System.out.println(<span class="str">"Generando hoja Excel de envíos..."</span>);
+  }
+}
+<span class="kw">class</span> <span class="cls">ReporteCSV</span> <span class="kw">implements</span> <span class="cls">ReporteEnvios</span> {
+  <span class="kw">public void</span> <span class="fn">generar</span>() {
+    System.out.println(<span class="str">"Exportando CSV de envíos..."</span>);
+  }
+}
+
+<span class="cm">// 3. Creator (abstracto)</span>
+<span class="kw">abstract class</span> <span class="cls">FabricaReporte</span> {
+  <span class="kw">abstract</span> <span class="cls">ReporteEnvios</span> <span class="fn">crearReporte</span>();  <span class="cm">// factory method</span>
+
+  <span class="kw">void</span> <span class="fn">generarReporte</span>() {
+    <span class="cls">ReporteEnvios</span> r = <span class="fn">crearReporte</span>();
+    r.<span class="fn">generar</span>();
+  }
+}
+
+<span class="cm">// 4. ConcreteCreators</span>
+<span class="kw">class</span> <span class="cls">FabricaPDF</span> <span class="kw">extends</span> <span class="cls">FabricaReporte</span> {
+  <span class="cls">ReporteEnvios</span> <span class="fn">crearReporte</span>() { <span class="kw">return new</span> <span class="cls">ReportePDF</span>(); }
+}
+<span class="kw">class</span> <span class="cls">FabricaExcel</span> <span class="kw">extends</span> <span class="cls">FabricaReporte</span> {
+  <span class="cls">ReporteEnvios</span> <span class="fn">crearReporte</span>() { <span class="kw">return new</span> <span class="cls">ReporteExcel</span>(); }
+}
+<span class="kw">class</span> <span class="cls">FabricaCSV</span> <span class="kw">extends</span> <span class="cls">FabricaReporte</span> {
+  <span class="cls">ReporteEnvios</span> <span class="fn">crearReporte</span>() { <span class="kw">return new</span> <span class="cls">ReporteCSV</span>(); }
+}
+
+<span class="cm">// Uso en el cliente:</span>
+<span class="cls">FabricaReporte</span> f = <span class="kw">new</span> <span class="cls">FabricaPDF</span>();
+f.<span class="fn">generarReporte</span>();  <span class="cm">// Cliente no conoce ReportePDF</span></pre>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="gotoTab(2)">← Quiz</button>
+    <button class="btn btn-primary" onclick="gotoTab(4)">Continuar → Retos ⟶</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECCIÓN 4 — RETOS ADICIONALES
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="card">
+    <div class="card-title">Análisis y reflexión</div>
+    <h2>Retos adicionales</h2>
+    <p>Estos retos trabajan análisis, comparación y aplicación al proyecto real. Escribe tu respuesta y la IA la evalúa.</p>
+  </div>
+
+  <!-- RETO 1 -->
+  <div class="card">
+    <div class="card-title">Reto 1 — Identificar el patrón</div>
+    <p>El siguiente código <strong>NO usa</strong> Factory Method. <strong>Identifica los problemas</strong> de diseño y explica cómo aplicar el patrón para solucionarlos.</p>
+    <pre><span class="kw">class</span> <span class="cls">SistemaLogin</span> {
+  <span class="kw">void</span> <span class="fn">autenticar</span>(<span class="cls">String</span> tipo, <span class="cls">String</span> user, <span class="cls">String</span> pass) {
+    <span class="kw">if</span> (tipo.equals(<span class="str">"google"</span>)) {
+      <span class="kw">new</span> <span class="cls">AuthGoogle</span>().<span class="fn">login</span>(user, pass);
+    } <span class="kw">else if</span> (tipo.equals(<span class="str">"github"</span>)) {
+      <span class="kw">new</span> <span class="cls">AuthGithub</span>().<span class="fn">login</span>(user, pass);
+    } <span class="kw">else if</span> (tipo.equals(<span class="str">"facebook"</span>)) {
+      <span class="kw">new</span> <span class="cls">AuthFacebook</span>().<span class="fn">login</span>(user, pass);
+    }
+  }
+}</pre>
+    <div class="editor-label" style="margin-top:12px">Tu análisis</div>
+    <textarea class="code-editor" id="reto1-input" rows="8" placeholder="Escribe aquí los problemas que detectas y cómo aplicarías Factory Method..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" id="btn-r1" onclick="evaluateReto(1)">🤖 Evaluar</button>
+    </div>
+    <div id="ai-reto1" class="ai-box">
+      <div class="ai-tag">🤖 Retroalimentación</div>
+      <div id="ai-reto1-text"></div>
+    </div>
+  </div>
+
+  <!-- RETO 2 -->
+  <div class="card">
+    <div class="card-title">Reto 2 — Pregunta de reflexión</div>
+    <p>¿En qué se diferencia <strong>Factory Method</strong> de simplemente usar un método estático que devuelva distintos objetos con un <code>if/else</code>? ¿Son lo mismo? Argumenta tu respuesta.</p>
+    <div class="editor-label" style="margin-top:12px">Tu respuesta</div>
+    <textarea class="code-editor" id="reto2-input" rows="7" placeholder="Escribe tu argumento aquí..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" id="btn-r2" onclick="evaluateReto(2)">🤖 Evaluar</button>
+    </div>
+    <div id="ai-reto2" class="ai-box">
+      <div class="ai-tag">🤖 Retroalimentación</div>
+      <div id="ai-reto2-text"></div>
+    </div>
+  </div>
+
+  <!-- RETO 3 -->
+  <div class="card">
+    <div class="card-title">Reto 3 — Pertinencia en el proyecto</div>
+    <p>Piensa en un sistema que gestiona proyectos de estudiantes universitarios (registro, seguimiento, reportes). <strong>¿En qué módulo o funcionalidad aplicarías Factory Method y por qué?</strong> Describe brevemente la estructura que usarías (qué sería el Product, el Creator, etc.).</p>
+    <div class="editor-label" style="margin-top:12px">Tu propuesta</div>
+    <textarea class="code-editor" id="reto3-input" rows="8" placeholder="Describe el módulo, los participantes del patrón y por qué tiene sentido aplicarlo ahí..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" id="btn-r3" onclick="evaluateReto(3)">🤖 Evaluar</button>
+    </div>
+    <div id="ai-reto3" class="ai-box">
+      <div class="ai-tag">🤖 Retroalimentación</div>
+      <div id="ai-reto3-text"></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="gotoTab(3)">← Taller</button>
+    <button class="btn btn-primary" onclick="gotoTab(5)">Ver mis resultados ⟶</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECCIÓN 5 — RESULTADOS
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="card" style="text-align:center;padding:30px 22px">
+    <div style="font-size:48px;margin-bottom:12px">🏭</div>
+    <h2 style="margin-bottom:8px">Resumen de tu actividad</h2>
+    <p>Has recorrido el patrón Factory Method desde la teoría hasta la implementación y el análisis crítico.</p>
+  </div>
+
+  <div id="final-score-card" class="card">
+    <div class="card-title">Puntaje del quiz</div>
+    <div id="final-score-text" style="font-size:22px;font-weight:800;color:var(--orange)">—</div>
+    <p id="final-score-msg" style="margin-top:6px"></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Lo que aprendiste hoy</div>
+    <ul>
+      <li><strong>Intención:</strong> diferir la instanciación a subclases para desacoplar el creador del producto.</li>
+      <li><strong>Cuándo usarlo:</strong> variedad real de productos que puede crecer, framework extensible.</li>
+      <li><strong>4 participantes:</strong> Product, ConcreteProduct, Creator, ConcreteCreator.</li>
+      <li><strong>Clave:</strong> Creator solo conoce la interfaz Product; nunca la clase concreta.</li>
+      <li><strong>Costo real:</strong> más subclases — no aplicar cuando hay solo 1 o 2 tipos fijos.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Patrones relacionados para explorar después</div>
+    <table>
+      <tr><th>Patrón</th><th>Relación con Factory Method</th></tr>
+      <tr><td>Abstract Factory</td><td>A menudo implementado internamente con Factory Methods; crea familias de objetos relacionados.</td></tr>
+      <tr><td>Template Method</td><td>Los factory methods suelen invocarse desde Template Methods como paso variable del algoritmo.</td></tr>
+      <tr><td>Prototype</td><td>Alternativa a Factory Method que no requiere subclasificar Creator, pero sí inicializar el prototipo.</td></tr>
+    </table>
+  </div>
+
+  <div class="btn-row" style="justify-content:center">
+    <button class="btn btn-secondary" onclick="gotoTab(0)">↩ Volver al inicio</button>
+    <button class="btn btn-primary" onclick="resetQuiz(); gotoTab(2)">🔁 Repetir quiz</button>
+  </div>
+</div>
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════════
+let currentTab = 0;
+let sampleFn = null;
+let quizAnswers = {};     // { qIndex: selectedOption }
+let quizCorrects = 0;
+const TOTAL_TABS = 6;
+
+// ═══════════════════════════════════════════════
+// INIT SAMPLE CAPABILITY
+// ═══════════════════════════════════════════════
+(async () => {
+  try {
+    sampleFn = await claude.use("sample");
+  } catch(e) { sampleFn = null; }
+})();
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+const tabs = document.querySelectorAll('.tab');
+const sections = document.querySelectorAll('.section');
+
+function gotoTab(i) {
+  currentTab = i;
+  tabs.forEach((t, idx) => t.classList.toggle('active', idx === i));
+  sections.forEach((s, idx) => s.classList.toggle('active', idx === i));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  markTabDone(i);
+  updateProgress();
+  if (i === 5) updateFinalScore();
+}
+
+function markTabDone(i) {
+  document.getElementById('tn' + i)?.closest('.tab')?.classList.add('done');
+}
+
+const tabDone = new Set([0]);
+function updateProgress() {
+  tabDone.add(currentTab);
+  const n = tabDone.size;
+  document.getElementById('progress-text').textContent = n + ' / ' + TOTAL_TABS;
+  document.getElementById('progress-fill').style.width = (n / TOTAL_TABS * 100) + '%';
+  tabs.forEach((t, i) => {
+    if (tabDone.has(i)) t.classList.add('done');
+  });
+}
+
+// ═══════════════════════════════════════════════
+// QUIZ DATA
+// ═══════════════════════════════════════════════
+const questions = [
+  {
+    text: "¿Cuál es la intención del patrón Factory Method?",
+    options: [
+      "Crear una única instancia de una clase en todo el sistema",
+      "Definir una interfaz para crear un objeto, dejando que las subclases decidan qué clase instanciar",
+      "Componer objetos en estructuras de árbol para representar jerarquías parte-todo",
+      "Proveer una interfaz unificada para un conjunto de interfaces en un subsistema"
+    ],
+    correct: 1,
+    explanation: "La intención exacta del GoF: 'Define an interface for creating an object, but let subclasses decide which class to instantiate.' También se conoce como Constructor Virtual."
+  },
+  {
+    text: "En la estructura de Factory Method, ¿qué rol cumple el CREATOR?",
+    options: [
+      "Implementa la lógica de negocio y crea objetos directamente con 'new'",
+      "Define la interfaz que todos los productos concretos deben implementar",
+      "Declara el factory method y puede usar el producto vía la interfaz Product, sin conocer la clase concreta",
+      "Sobrescribe el factory method para devolver una instancia de un ConcreteProduct"
+    ],
+    correct: 2,
+    explanation: "Creator declara el factory method y puede invocar el producto a través de la interfaz. La clave es que NUNCA referencia directamente una clase concreta de producto — esa decisión la toma ConcreteCreator."
+  },
+  {
+    text: "¿Cuál de los siguientes escenarios justifica mejor el uso de Factory Method?",
+    options: [
+      "Una aplicación que siempre generará reportes en PDF y nada más",
+      "Un framework que debe poder crear distintos tipos de documentos según la subclase de aplicación que lo use",
+      "Una clase que necesita calcular la suma de una lista de números",
+      "Un sistema con exactamente dos tipos de usuario fijos que nunca cambiarán"
+    ],
+    correct: 1,
+    explanation: "Este es el ejemplo clásico del GoF: Application/Document. El framework no puede prever el subtipo concreto de Document, así que define crearDocumento() abstracto y deja que cada subclase de Application lo implemente."
+  },
+  {
+    text: "¿Qué principio SOLID cumple directamente Factory Method al desacoplar la creación del uso?",
+    options: [
+      "Principio de Sustitución de Liskov (LSP)",
+      "Principio de Segregación de Interfaces (ISP)",
+      "Principio Abierto/Cerrado (OCP)",
+      "Principio de Responsabilidad Única (SRP)"
+    ],
+    correct: 2,
+    explanation: "OCP: las clases deben estar abiertas para extensión pero cerradas para modificación. Con Factory Method, agregar un nuevo tipo de producto solo requiere crear una nueva subclase — no modificar el código existente."
+  },
+  {
+    text: "¿Cuál es la principal DESVENTAJA del patrón Factory Method?",
+    options: [
+      "No puede usarse con lenguajes orientados a objetos modernos como Java o Python",
+      "Obliga a que todos los productos compartan una interfaz o clase base común, y puede provocar proliferación de subclases",
+      "Hace que el código sea imposible de testear con pruebas unitarias",
+      "Solo funciona cuando hay exactamente dos tipos de producto"
+    ],
+    correct: 1,
+    explanation: "El GoF lo menciona explícitamente: los clientes podrían verse obligados a subclasificar Creator solo para crear un ConcreteProduct. Además, todos los productos deben compartir una interfaz, lo que no siempre es natural."
+  },
+  {
+    text: "En este fragmento:\n\nabstract class FabricaReporte {\n  abstract Reporte crearReporte();\n  void generarReporte() {\n    Reporte r = crearReporte();\n    r.generar();\n  }\n}\n\n¿Qué ventaja clave demuestra el método generarReporte()?",
+    options: [
+      "Que Creator conoce la clase concreta del objeto que usa, lo que hace el código más legible",
+      "Que Creator puede implementar lógica de negocio compleja usando el producto sin conocer su clase concreta",
+      "Que el cliente no necesita crear una subclase de FabricaReporte para usarla",
+      "Que el factory method crearReporte() no necesita ser abstracto"
+    ],
+    correct: 1,
+    explanation: "Esta es la esencia del patrón: Creator tiene lógica de negocio (generarReporte) que USA el producto vía la interfaz Reporte, sin saber nada de ReportePDF, ReporteExcel, etc. El qué se crea lo decide ConcreteCreator."
+  }
+];
+
+// ═══════════════════════════════════════════════
+// RENDERIZAR QUIZ
+// ═══════════════════════════════════════════════
+function buildQuiz() {
+  const c = document.getElementById('quiz-container');
+  c.innerHTML = '';
+  questions.forEach((q, qi) => {
+    const letters = ['A','B','C','D'];
+    const opts = q.options.map((opt, oi) => `
+      <button class="option" data-q="${qi}" data-o="${oi}" onclick="pickOption(${qi},${oi})">
+        <span class="opt-letter">${letters[oi]}</span>
+        <span>${opt}</span>
+      </button>`).join('');
+    const pre = q.text.includes('\n') ? `<pre style="background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;color:#cdd6f4;margin:8px 0;white-space:pre-wrap">${q.text}</pre>` : '';
+    const displayText = q.text.includes('\n') ? q.text.split('\n')[0] : q.text;
+    c.innerHTML += `
+      <div class="question-card" id="qcard-${qi}">
+        <div class="question-text"><span class="q-num">P${qi+1}</span>${displayText}${pre?'':''}</div>
+        ${pre}
+        <div class="options">${opts}</div>
+        <div class="feedback" id="fb-${qi}"></div>
+      </div>`;
+  });
+}
+
+function pickOption(qi, oi) {
+  if (quizAnswers[qi] !== undefined) return;
+  quizAnswers[qi] = oi;
+  const q = questions[qi];
+  const correct = oi === q.correct;
+  if (correct) quizCorrects++;
+
+  // Estilizar opciones
+  document.querySelectorAll(`[data-q="${qi}"]`).forEach(btn => {
+    btn.disabled = true;
+    const idx = parseInt(btn.dataset.o);
+    if (idx === q.correct) btn.classList.add(correct ? 'correct' : 'reveal');
+    if (idx === oi && !correct) btn.classList.add('wrong');
+  });
+
+  // Feedback
+  const fb = document.getElementById('fb-' + qi);
+  fb.className = 'feedback show ' + (correct ? 'ok' : 'bad');
+  fb.textContent = (correct ? '✓ Correcto. ' : '✗ Incorrecto. ') + q.explanation;
+
+  // Revisar si terminó el quiz
+  if (Object.keys(quizAnswers).length === questions.length) showQuizResult();
+}
+
+function showQuizResult() {
+  const pct = quizCorrects / questions.length;
+  const container = document.getElementById('quiz-result');
+  container.style.display = 'block';
+
+  // Anillo
+  const circ = 2 * Math.PI * 40;
+  document.getElementById('score-dash').style.strokeDashoffset = circ * (1 - pct);
+
+  document.getElementById('score-val').textContent = quizCorrects + '/' + questions.length;
+  const titles = ['Sigue repasando 💪','Vas bien, sigue 🔄','¡Muy bien! 🎯','¡Excelente! 🏆'];
+  const msgs   = [
+    'Revisa la sección de Teoría y Estructura antes de continuar con el taller.',
+    'Casi lo tienes. Repasa las preguntas que fallaste.',
+    'Dominas los conceptos clave del patrón.',
+    '¡Comprensión perfecta del Factory Method!'
+  ];
+  const tier = pct < .5 ? 0 : pct < .67 ? 1 : pct < 1 ? 2 : 3;
+  document.getElementById('result-title').textContent = titles[tier];
+  document.getElementById('result-msg').textContent   = msgs[tier];
+
+  // Review list
+  const rl = document.getElementById('review-list');
+  rl.innerHTML = '<div class="card-title" style="margin-bottom:10px">Revisión por pregunta</div>';
+  questions.forEach((q, i) => {
+    const ok = quizAnswers[i] === q.correct;
+    const short = q.text.includes('\n') ? q.text.split('\n')[0] : q.text;
+    rl.innerHTML += `<div class="review-item ${ok?'ok':'bad'}">
+      <span class="review-icon">${ok?'✓':'✗'}</span>
+      <span><strong>P${i+1}:</strong> ${short.slice(0,70)}${short.length>70?'…':''}</span>
+    </div>`;
+  });
+
+  container.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetQuiz() {
+  quizAnswers = {};
+  quizCorrects = 0;
+  document.getElementById('quiz-result').style.display = 'none';
+  buildQuiz();
+  window.scrollTo({ top: 0 });
+}
+
+// ═══════════════════════════════════════════════
+// TALLER — EVALUACIÓN IA
+// ═══════════════════════════════════════════════
+async function evaluateCode() {
+  const code = document.getElementById('code-input').value.trim();
+  if (!code) { alert('Escribe algo primero 😉'); return; }
+  if (!sampleFn) { showAIError('ai-text', 'La IA no está disponible en este momento.'); return; }
+
+  const btn = document.getElementById('btn-eval');
+  btn.disabled = true; btn.textContent = '⏳ Evaluando...';
+  const box = document.getElementById('ai-feedback');
+  const txt = document.getElementById('ai-text');
+  box.classList.add('show');
+  txt.textContent = 'Analizando tu implementación...';
+
+  try {
+    await sampleFn(
+      `Eres un profesor de Arquitectura de Software evaluando un taller sobre el patrón de diseño Factory Method.
+
+El estudiante debía:
+1. Definir una interfaz ReporteEnvios con método generar()
+2. Implementar ReportePDF, ReporteExcel y ReporteCSV que implementen la interfaz
+3. Crear una clase abstracta FabricaReporte con factory method crearReporte() (abstracto) y un método generarReporte() que lo use internamente
+4. Implementar FabricaPDF, FabricaExcel y FabricaCSV como subclases de FabricaReporte
+
+Código del estudiante:
+${code}
+
+Evalúa en 3-4 párrafos breves:
+- ¿Aplica correctamente el patrón Factory Method? (Product, ConcreteProduct, Creator, ConcreteCreator)
+- ¿El factory method está bien definido? ¿El Creator usa el producto vía la interfaz?
+- ¿Qué aspectos están bien y qué mejorar?
+- Una calificación cualitativa: Insuficiente / En proceso / Suficiente / Excelente
+
+Sé constructivo, claro y específico. Máximo 250 palabras.`,
+      {
+        modelTier: 'quick',
+        onText: ({ text }) => { txt.textContent = text; }
+      }
+    );
+  } catch(e) {
+    if (e.code !== 'cancelled') txt.textContent = 'Error al evaluar: ' + (e.message || e.code);
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 Evaluar con IA';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RETOS — EVALUACIÓN IA
+// ═══════════════════════════════════════════════
+const retoPrompts = {
+  1: (r) => `Eres un profesor de Arquitectura de Software. El estudiante debe identificar problemas de diseño en este código:
+
+class SistemaLogin {
+  void autenticar(String tipo, String user, String pass) {
+    if (tipo.equals("google")) { new AuthGoogle().login(user, pass); }
+    else if (tipo.equals("github")) { new AuthGithub().login(user, pass); }
+    else if (tipo.equals("facebook")) { new AuthFacebook().login(user, pass); }
+  }
+}
+
+Y explicar cómo aplicar Factory Method para solucionarlo.
+
+Respuesta del estudiante:
+${r}
+
+Evalúa si identificó: acoplamiento con clases concretas, violación OCP, dificultad para extender. Y si propone correctamente interfaces/clases abstractas + subclases. Sé específico y constructivo. Máximo 200 palabras.`,
+
+  2: (r) => `Eres profesor de Arquitectura de Software. La pregunta es: ¿en qué se diferencia Factory Method de un método estático con if/else?
+
+Respuesta del estudiante:
+${r}
+
+Evalúa si el estudiante distingue correctamente:
+- Factory Method usa herencia/polimorfismo (subclases deciden en tiempo de ejecución)
+- El método estático con if/else es solo una variante del constructor: sigue acoplado a las clases concretas, no permite extensión sin modificar el método, viola OCP
+- Factory Method es un patrón orientado a objetos que aprovecha el polimorfismo; el if/else es una "fábrica parametrizada simple" que no es lo mismo
+
+Sé constructivo y claro. Máximo 200 palabras.`,
+
+  3: (r) => `Eres profesor de Arquitectura de Software evaluando si un estudiante sabe aplicar Factory Method a un sistema real de gestión de proyectos estudiantiles universitarios.
+
+Respuesta del estudiante:
+${r}
+
+Evalúa: ¿identifica un módulo coherente? ¿propone correctamente los 4 participantes (Product, ConcreteProduct, Creator, ConcreteCreator)? ¿la variedad de "tipos" justifica el patrón? Da retroalimentación constructiva. Máximo 200 palabras.`
+};
+
+async function evaluateReto(n) {
+  const input = document.getElementById('reto' + n + '-input').value.trim();
+  if (!input) { alert('Escribe tu respuesta primero 😉'); return; }
+  if (!sampleFn) { alert('La IA no está disponible en este momento.'); return; }
+
+  const btn = document.getElementById('btn-r' + n);
+  btn.disabled = true; btn.textContent = '⏳ Evaluando...';
+  const box = document.getElementById('ai-reto' + n);
+  const txt = document.getElementById('ai-reto' + n + '-text');
+  box.classList.add('show');
+  txt.textContent = 'Analizando...';
+
+  try {
+    await sampleFn(retoPrompts[n](input), {
+      modelTier: 'quick',
+      onText: ({ text }) => { txt.textContent = text; }
+    });
+  } catch(e) {
+    if (e.code !== 'cancelled') txt.textContent = 'Error: ' + (e.message || e.code);
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 Evaluar';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// UTILIDADES UI
+// ═══════════════════════════════════════════════
+function toggleHint() {
+  const h = document.getElementById('hint-box');
+  h.classList.toggle('show');
+}
+
+function showSolution() {
+  const s = document.getElementById('solution-box');
+  s.style.display = s.style.display === 'none' ? 'block' : 'none';
+}
+
+function showAIError(id, msg) {
+  document.getElementById(id).textContent = msg;
+}
+
+function updateFinalScore() {
+  const total = questions.length;
+  const txt = document.getElementById('final-score-text');
+  const msg = document.getElementById('final-score-msg');
+  if (Object.keys(quizAnswers).length === 0) {
+    txt.textContent = 'Quiz no completado';
+    msg.textContent = 'Regresa a la sección Quiz para completarlo.';
+  } else {
+    const pct = Math.round(quizCorrects / total * 100);
+    txt.textContent = quizCorrects + ' / ' + total + ' correctas (' + pct + '%)';
+    msg.textContent = pct >= 80
+      ? '¡Excelente comprensión del patrón!'
+      : pct >= 50 ? 'Buen intento. Repasa los conceptos que fallaste.'
+      : 'Sigue practicando. La teoría y los ejemplos te ayudarán.';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+buildQuiz();
+updateProgress();
+</script>
+</body>
+</html>
