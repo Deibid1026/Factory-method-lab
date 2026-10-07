@@ -233,37 +233,7 @@
     text-transform: uppercase; letter-spacing: .05em;
     margin-bottom: 6px;
   }
-  .hint-box {
-    background: var(--blue-dim);
-    border: 1px solid var(--blue);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: var(--blue);
-    margin: 10px 0;
-    display: none;
-  }
-  .hint-box.show { display: block; }
 
-  /* ── AI FEEDBACK ── */
-  .ai-box {
-    background: var(--surface2);
-    border: 1.5px solid var(--orange);
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-top: 12px;
-    font-size: 14px;
-    line-height: 1.65;
-    min-height: 60px;
-    display: none;
-    white-space: pre-wrap;
-  }
-  .ai-box.show { display: block; }
-  .ai-tag {
-    font-size: 11px; font-weight: 700; color: var(--orange);
-    text-transform: uppercase; letter-spacing: .07em;
-    margin-bottom: 6px;
-  }
 
   /* ── BUTTONS ── */
   .btn {
@@ -621,19 +591,10 @@ abstract class FabricaReporte {
 
 // Sigue implementando..."></textarea>
 
-    <div class="hint-box" id="hint-box">
-      💡 <strong>Pista:</strong> Recuerda que el factory method debe ser abstracto en la clase Creator, y cada ConcreteCreator solo necesita implementar ese método devolviendo <code>new ClaseProducto()</code>. La lógica de uso del producto va en el método <code>generarReporte()</code> de la clase abstracta.
-    </div>
 
     <div class="btn-row">
-      <button class="btn btn-primary" id="btn-eval" onclick="evaluateCode()">🤖 Evaluar con IA</button>
       <button class="btn btn-secondary btn-sm" onclick="toggleHint()">💡 Pista</button>
       <button class="btn btn-secondary btn-sm" onclick="showSolution()">👁 Ver solución</button>
-    </div>
-
-    <div id="ai-feedback" class="ai-box">
-      <div class="ai-tag">🤖 Retroalimentación de la IA</div>
-      <div id="ai-text">Procesando...</div>
     </div>
   </div>
 
@@ -722,13 +683,7 @@ f.<span class="fn">generarReporte</span>();  <span class="cm">// Cliente no cono
 }</pre>
     <div class="editor-label" style="margin-top:12px">Tu análisis</div>
     <textarea class="code-editor" id="reto1-input" rows="8" placeholder="Escribe aquí los problemas que detectas y cómo aplicarías Factory Method..."></textarea>
-    <div class="btn-row">
-      <button class="btn btn-primary btn-sm" id="btn-r1" onclick="evaluateReto(1)">🤖 Evaluar</button>
-    </div>
-    <div id="ai-reto1" class="ai-box">
-      <div class="ai-tag">🤖 Retroalimentación</div>
-      <div id="ai-reto1-text"></div>
-    </div>
+
   </div>
 
   <!-- RETO 2 -->
@@ -737,13 +692,7 @@ f.<span class="fn">generarReporte</span>();  <span class="cm">// Cliente no cono
     <p>¿En qué se diferencia <strong>Factory Method</strong> de simplemente usar un método estático que devuelva distintos objetos con un <code>if/else</code>? ¿Son lo mismo? Argumenta tu respuesta.</p>
     <div class="editor-label" style="margin-top:12px">Tu respuesta</div>
     <textarea class="code-editor" id="reto2-input" rows="7" placeholder="Escribe tu argumento aquí..."></textarea>
-    <div class="btn-row">
-      <button class="btn btn-primary btn-sm" id="btn-r2" onclick="evaluateReto(2)">🤖 Evaluar</button>
-    </div>
-    <div id="ai-reto2" class="ai-box">
-      <div class="ai-tag">🤖 Retroalimentación</div>
-      <div id="ai-reto2-text"></div>
-    </div>
+
   </div>
 
   <!-- RETO 3 -->
@@ -752,13 +701,7 @@ f.<span class="fn">generarReporte</span>();  <span class="cm">// Cliente no cono
     <p>Piensa en un sistema que gestiona proyectos de estudiantes universitarios (registro, seguimiento, reportes). <strong>¿En qué módulo o funcionalidad aplicarías Factory Method y por qué?</strong> Describe brevemente la estructura que usarías (qué sería el Product, el Creator, etc.).</p>
     <div class="editor-label" style="margin-top:12px">Tu propuesta</div>
     <textarea class="code-editor" id="reto3-input" rows="8" placeholder="Describe el módulo, los participantes del patrón y por qué tiene sentido aplicarlo ahí..."></textarea>
-    <div class="btn-row">
-      <button class="btn btn-primary btn-sm" id="btn-r3" onclick="evaluateReto(3)">🤖 Evaluar</button>
-    </div>
-    <div id="ai-reto3" class="ai-box">
-      <div class="ai-tag">🤖 Retroalimentación</div>
-      <div id="ai-reto3-text"></div>
-    </div>
+
   </div>
 
   <div class="btn-row">
@@ -816,19 +759,11 @@ f.<span class="fn">generarReporte</span>();  <span class="cm">// Cliente no cono
 // ESTADO GLOBAL
 // ═══════════════════════════════════════════════
 let currentTab = 0;
-let sampleFn = null;
 let quizAnswers = {};     // { qIndex: selectedOption }
 let quizCorrects = 0;
 const TOTAL_TABS = 6;
 
-// ═══════════════════════════════════════════════
-// INIT SAMPLE CAPABILITY
-// ═══════════════════════════════════════════════
-(async () => {
-  try {
-    sampleFn = await claude.use("sample");
-  } catch(e) { sampleFn = null; }
-})();
+
 
 // ═══════════════════════════════════════════════
 // TABS
@@ -1027,132 +962,16 @@ function resetQuiz() {
 }
 
 // ═══════════════════════════════════════════════
-// TALLER — EVALUACIÓN IA
-// ═══════════════════════════════════════════════
-async function evaluateCode() {
-  const code = document.getElementById('code-input').value.trim();
-  if (!code) { alert('Escribe algo primero 😉'); return; }
-  if (!sampleFn) { showAIError('ai-text', 'La IA no está disponible en este momento.'); return; }
-
-  const btn = document.getElementById('btn-eval');
-  btn.disabled = true; btn.textContent = '⏳ Evaluando...';
-  const box = document.getElementById('ai-feedback');
-  const txt = document.getElementById('ai-text');
-  box.classList.add('show');
-  txt.textContent = 'Analizando tu implementación...';
-
-  try {
-    await sampleFn(
-      `Eres un profesor de Arquitectura de Software evaluando un taller sobre el patrón de diseño Factory Method.
-
-El estudiante debía:
-1. Definir una interfaz ReporteEnvios con método generar()
-2. Implementar ReportePDF, ReporteExcel y ReporteCSV que implementen la interfaz
-3. Crear una clase abstracta FabricaReporte con factory method crearReporte() (abstracto) y un método generarReporte() que lo use internamente
-4. Implementar FabricaPDF, FabricaExcel y FabricaCSV como subclases de FabricaReporte
-
-Código del estudiante:
-${code}
-
-Evalúa en 3-4 párrafos breves:
-- ¿Aplica correctamente el patrón Factory Method? (Product, ConcreteProduct, Creator, ConcreteCreator)
-- ¿El factory method está bien definido? ¿El Creator usa el producto vía la interfaz?
-- ¿Qué aspectos están bien y qué mejorar?
-- Una calificación cualitativa: Insuficiente / En proceso / Suficiente / Excelente
-
-Sé constructivo, claro y específico. Máximo 250 palabras.`,
-      {
-        modelTier: 'quick',
-        onText: ({ text }) => { txt.textContent = text; }
-      }
-    );
-  } catch(e) {
-    if (e.code !== 'cancelled') txt.textContent = 'Error al evaluar: ' + (e.message || e.code);
-  } finally {
-    btn.disabled = false; btn.textContent = '🤖 Evaluar con IA';
-  }
-}
-
-// ═══════════════════════════════════════════════
-// RETOS — EVALUACIÓN IA
-// ═══════════════════════════════════════════════
-const retoPrompts = {
-  1: (r) => `Eres un profesor de Arquitectura de Software. El estudiante debe identificar problemas de diseño en este código:
-
-class SistemaLogin {
-  void autenticar(String tipo, String user, String pass) {
-    if (tipo.equals("google")) { new AuthGoogle().login(user, pass); }
-    else if (tipo.equals("github")) { new AuthGithub().login(user, pass); }
-    else if (tipo.equals("facebook")) { new AuthFacebook().login(user, pass); }
-  }
-}
-
-Y explicar cómo aplicar Factory Method para solucionarlo.
-
-Respuesta del estudiante:
-${r}
-
-Evalúa si identificó: acoplamiento con clases concretas, violación OCP, dificultad para extender. Y si propone correctamente interfaces/clases abstractas + subclases. Sé específico y constructivo. Máximo 200 palabras.`,
-
-  2: (r) => `Eres profesor de Arquitectura de Software. La pregunta es: ¿en qué se diferencia Factory Method de un método estático con if/else?
-
-Respuesta del estudiante:
-${r}
-
-Evalúa si el estudiante distingue correctamente:
-- Factory Method usa herencia/polimorfismo (subclases deciden en tiempo de ejecución)
-- El método estático con if/else es solo una variante del constructor: sigue acoplado a las clases concretas, no permite extensión sin modificar el método, viola OCP
-- Factory Method es un patrón orientado a objetos que aprovecha el polimorfismo; el if/else es una "fábrica parametrizada simple" que no es lo mismo
-
-Sé constructivo y claro. Máximo 200 palabras.`,
-
-  3: (r) => `Eres profesor de Arquitectura de Software evaluando si un estudiante sabe aplicar Factory Method a un sistema real de gestión de proyectos estudiantiles universitarios.
-
-Respuesta del estudiante:
-${r}
-
-Evalúa: ¿identifica un módulo coherente? ¿propone correctamente los 4 participantes (Product, ConcreteProduct, Creator, ConcreteCreator)? ¿la variedad de "tipos" justifica el patrón? Da retroalimentación constructiva. Máximo 200 palabras.`
-};
-
-async function evaluateReto(n) {
-  const input = document.getElementById('reto' + n + '-input').value.trim();
-  if (!input) { alert('Escribe tu respuesta primero 😉'); return; }
-  if (!sampleFn) { alert('La IA no está disponible en este momento.'); return; }
-
-  const btn = document.getElementById('btn-r' + n);
-  btn.disabled = true; btn.textContent = '⏳ Evaluando...';
-  const box = document.getElementById('ai-reto' + n);
-  const txt = document.getElementById('ai-reto' + n + '-text');
-  box.classList.add('show');
-  txt.textContent = 'Analizando...';
-
-  try {
-    await sampleFn(retoPrompts[n](input), {
-      modelTier: 'quick',
-      onText: ({ text }) => { txt.textContent = text; }
-    });
-  } catch(e) {
-    if (e.code !== 'cancelled') txt.textContent = 'Error: ' + (e.message || e.code);
-  } finally {
-    btn.disabled = false; btn.textContent = '🤖 Evaluar';
-  }
-}
-
-// ═══════════════════════════════════════════════
 // UTILIDADES UI
 // ═══════════════════════════════════════════════
 function toggleHint() {
   const h = document.getElementById('hint-box');
-  h.classList.toggle('show');
+  if (h) h.classList.toggle('show');
 }
 
 function showSolution() {
   const s = document.getElementById('solution-box');
   s.style.display = s.style.display === 'none' ? 'block' : 'none';
-}
-
-function showAIError(id, msg) {
-  document.getElementById(id).textContent = msg;
 }
 
 function updateFinalScore() {
